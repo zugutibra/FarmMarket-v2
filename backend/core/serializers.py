@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Farmer, Buyer, Product
+from .models import *
 from django.contrib.auth.hashers import make_password
 
 class FarmerSerializer(serializers.ModelSerializer):
@@ -35,8 +35,8 @@ class BuyerSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = ['id', 'name', 'description', 'price', 'quantity', 'category', 'farmer']
-
+        fields = '__all__'
+        
     def validate_farmer(self, value):
         # Check if the farmer exists
         if not Farmer.objects.filter(id=value.id).exists():
@@ -45,3 +45,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return Product.objects.create(**validated_data)
+    
+    
+class CartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
+        fields = '__all__'
+        
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'

@@ -8,8 +8,8 @@ from django.contrib.auth.hashers import check_password, make_password
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Farmer, Buyer, Product
-from .serializers import FarmerSerializer, BuyerSerializer, ProductSerializer
+from .models import *
+from .serializers import *
 
 
 # Farmer Registration
@@ -32,24 +32,43 @@ class BuyerRegistrationView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# class AddProductView(APIView):
+#     def post(self, request):
+#         farmer_id = request.data.get('farmer_id')
+#         try:
+#             farmer = Farmer.objects.get(id=farmer_id)
+#         except Farmer.DoesNotExist:
+#             return Response({"error": "Farmer not found or invalid"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         # Create the product
+#         product = Product.objects.create(
+#             name=request.data['name'],
+#             description=request.data['description'],
+#             price=request.data['price'],
+#             quantity=request.data['quantity'],
+#             category=request.data['category'],
+#             farmer=farmer
+#         )
+#         return Response({"message": "Product added successfully", "id": product.id}, status=status.HTTP_201_CREATED)
+
+
 class AddProductView(APIView):
     def post(self, request):
-        farmer_id = request.data.get('farmer_id')
-        try:
-            farmer = Farmer.objects.get(id=farmer_id)
-        except Farmer.DoesNotExist:
-            return Response({"error": "Farmer not found or invalid"}, status=status.HTTP_400_BAD_REQUEST)
+        # try:
+        #     farmer = Farmer.objects.get(id=farmer_id)
+        # except Farmer.DoesNotExist:
+        #     return Response({"error": "Farmer not found or invalid"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # request.data['farmer'] = farmer.id
+        
+        serializer = ProductSerializer(data=request.data)
+        if serializer.is_valid():
+            product = serializer.save()
+            return Response({"message": "Product added successfully", "id": product.id}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create the product
-        product = Product.objects.create(
-            name=request.data['name'],
-            description=request.data['description'],
-            price=request.data['price'],
-            quantity=request.data['quantity'],
-            category=request.data['category'],
-            farmer=farmer
-        )
-        return Response({"message": "Product added successfully", "id": product.id}, status=status.HTTP_201_CREATED)
+
 
 class FarmerProductList(APIView):
     def get(self, request, farmer_id):
@@ -67,8 +86,11 @@ class FarmerProductList(APIView):
 
 class ProductListView(APIView):
     def get(self, request):
-        products = Product.objects.all().values()
-        return Response({"success": True, "products": list(products)}, status=status.HTTP_200_OK)
+        #products = Product.objects.all().values()
+        #return Response({"success": True, "products": list(products)}, status=status.HTTP_200_OK)
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 # Login
 class LoginView(APIView):
@@ -159,6 +181,7 @@ def admin_login(request):
 def admin_logout(request):
     request.session.flush()
     return redirect('admin_login')
+
 class UpdateProductView(APIView):
     def put(self, request, product_id):
         try:
