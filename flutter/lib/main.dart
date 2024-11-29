@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:untitled/screens/farmer_screens/farmer_registration_screen.dart';
 import 'screens/login_screen.dart';
-import 'screens/farmer_registration_screen.dart';
-import 'screens/buyer_registration_screen.dart';
+import 'screens/buyer_screens/buyer_registration_screen.dart';
 
 void main() {
   runApp(FarmerBuyerApp());
