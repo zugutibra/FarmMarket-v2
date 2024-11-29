@@ -9,6 +9,32 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
 
+class DeleteCartItemView(APIView):
+    """
+    Class-based view to handle deleting a cart item.
+    """
+
+    def delete(self, request, cart_item_id, *args, **kwargs):
+        try:
+            # Try to find the cart item by its ID
+            cart_item = Cart.objects.get(id=cart_item_id)
+            cart_item.delete()
+            return Response(
+                {"message": "Cart item deleted successfully."},
+                status=status.HTTP_200_OK,
+            )
+        except Cart.DoesNotExist:
+            # If the cart item does not exist, return a 404 error
+            return Response(
+                {"error": "Cart item not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception as e:
+            # For any other exception, return a 500 error with the exception message
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 class BuyerCartAPIView(APIView):
     def get(self, request, user_id):
