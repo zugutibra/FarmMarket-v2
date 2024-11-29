@@ -9,14 +9,13 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
 
+
 class BuyerCartAPIView(APIView):
     def get(self, request, user_id):
-        try:
-            carts = Cart.objects.filter(buyer__id=user_id)
-            serializer = CartSerializer(carts, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        carts = Cart.objects.filter(buyer__id=user_id)  # Filter carts by buyer
+        serializer = CartSerializer(carts, many=True)   # Serialize all carts
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 class AddToCartView(APIView):
     def post(self, request):
         try:

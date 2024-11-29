@@ -28,10 +28,9 @@ class FarmerSerializer(serializers.ModelSerializer):
         representation.pop('password', None)  # Remove 'password' field
         return representation
 
-class CartSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Cart
-        fields = '__all__'
+
+
+
 
 class BuyerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,13 +61,16 @@ class ProductSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         return Product.objects.create(**validated_data)
     
-    
-class CartSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Cart
-        fields = '__all__'
+
         
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
+
+class CartSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'product_name', 'amount', 'total_price']
