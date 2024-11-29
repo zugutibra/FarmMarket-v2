@@ -99,7 +99,6 @@ class Order(models.Model):
 class Cart(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET(out_of_stock))
     buyer = models.ForeignKey(Buyer, on_delete=models.SET("deleted user"))
-    farmer = models.ForeignKey(Farmer, on_delete=models.SET("farmer no longer available"))
     amount = models.IntegerField()
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     

@@ -1,22 +1,154 @@
+import logging
+
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework.exceptions import ValidationError
-
-from .models import Farmer, Buyer, Admin
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import check_password, make_password
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import *
 from .serializers import *
 
+class BuyerCartAPIView(APIView):
+    def get(self, request, user_id):
+        try:
+            carts = Cart.objects.filter(buyer__id=user_id)
+            serializer = CartSerializer(carts, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+class AddToCartView(APIView):
+    def post(self, request):
+        try:
+            user_id = request.data.get('user_id')
+            product_id = request.data.get('product_id')
+            quantity = request.data.get('quantity')
 
-# Farmer Registration
+            # Validate fields
+            if not user_id or not product_id or not quantity:
+                return Response({"error": "Missing fields"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Fetch related objects
+            buyer = Buyer.objects.get(pk=user_id)
+            product = Product.objects.get(pk=product_id)
+
+            if product.quantity < quantity:
+                return Response({"error": "Insufficient stock"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Calculate total price
+            total_price = product.price * quantity
+
+            # Create cart entry
+            cart_item = Cart.objects.create(
+                product=product,
+                buyer=buyer,
+                amount=quantity,
+                total_price=total_price
+            )
+
+            return Response({"message": "Product added to cart successfully"}, status=status.HTTP_200_OK)
+
+        except Product.DoesNotExist:
+            return Response({"error": "Product not found"}, status=status.HTTP_400_BAD_REQUEST)
+        except Buyer.DoesNotExist:
+            return Response({"error": "Buyer not found"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class FarmerProfileView(APIView):
+    def put(self, request, farmer_id, format=None):
+        try:
+            farmer = Farmer.objects.get(id=farmer_id)
+        except Farmer.DoesNotExist:
+            return Response({'message': 'Farmer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Log incoming request data
+        print(f"Incoming data: {request.data}")
+
+        # Validate and update the data
+        serializer = FarmerSerializer(farmer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
+        else:
+            print(f"Validation errors: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, farmer_id=None, email=None):
+        try:
+            # Fetch farmer by ID or email
+            if farmer_id:
+                farmer = Farmer.objects.get(id=farmer_id)
+            elif email:
+                farmer = Farmer.objects.get(email=email)
+            else:
+                return Response(
+                    {"error": "Either farmer_id or email is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Serialize farmer data
+            serializer = FarmerSerializer(farmer)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Farmer.DoesNotExist:
+            return Response(
+                {"error": "Farmer not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+class BuyerProfileView(APIView):
+    def put(self, request, user_id, format=None):
+        try:
+            buyer = Buyer.objects.get(id=user_id)
+        except Farmer.DoesNotExist:
+            return Response({'message': 'Buyer not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Log incoming request data
+        print(f"Incoming data: {request.data}")
+
+        # Validate and update the data
+        serializer = BuyerSerializer(buyer, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'Profile updated successfully'}, status=status.HTTP_200_OK)
+        else:
+            print(f"Validation errors: {serializer.errors}")
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request, user_id=None, email=None):
+        try:
+            # Fetch farmer by ID or email
+            if user_id:
+                buyer = Buyer.objects.get(id=user_id)
+            elif email:
+                buyer = Buyer.objects.get(email=email)
+            else:
+                return Response(
+                    {"error": "Either user_id or email is required."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Serialize farmer data
+            serializer = BuyerSerializer(buyer)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Farmer.DoesNotExist:
+            return Response(
+                {"error": "Buyer not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )
 class FarmerRegistrationView(APIView):
     def post(self, request):
         serializer = FarmerSerializer(data=request.data)
         if serializer.is_valid():
+            decision_message = "Congratulations! Your account has been created (as Farmer)."
+            send_mail(
+                subject="Account Decision Notification",
+                message=f"Dear {serializer.validated_data['name']},\n\n{decision_message}\n\nThank you.",
+                from_email="ibrabekturgan@gmail.com",  # Replace with your email
+                recipient_list=[serializer.validated_data['email']],
+                fail_silently=False,
+            )
             serializer.save(account_status='pending')  # Default status
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -27,40 +159,21 @@ class BuyerRegistrationView(APIView):
     def post(self, request):
         serializer = BuyerSerializer(data=request.data)
         if serializer.is_valid():
+            decision_message = "Congratulations! Your account has been created (as Buyer)."
+            send_mail(
+                subject="Account Decision Notification",
+                message=f"Dear {serializer.validated_data['name']},\n\n{decision_message}\n\nThank you.",
+                from_email="ibrabekturgan@gmail.com",
+                recipient_list=[serializer.validated_data['email']],
+                fail_silently=False,
+            )
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# class AddProductView(APIView):
-#     def post(self, request):
-#         farmer_id = request.data.get('farmer_id')
-#         try:
-#             farmer = Farmer.objects.get(id=farmer_id)
-#         except Farmer.DoesNotExist:
-#             return Response({"error": "Farmer not found or invalid"}, status=status.HTTP_400_BAD_REQUEST)
-
-#         # Create the product
-#         product = Product.objects.create(
-#             name=request.data['name'],
-#             description=request.data['description'],
-#             price=request.data['price'],
-#             quantity=request.data['quantity'],
-#             category=request.data['category'],
-#             farmer=farmer
-#         )
-#         return Response({"message": "Product added successfully", "id": product.id}, status=status.HTTP_201_CREATED)
-
-
 class AddProductView(APIView):
     def post(self, request):
-        # try:
-        #     farmer = Farmer.objects.get(id=farmer_id)
-        # except Farmer.DoesNotExist:
-        #     return Response({"error": "Farmer not found or invalid"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # request.data['farmer'] = farmer.id
-        
         serializer = ProductSerializer(data=request.data)
         if serializer.is_valid():
             product = serializer.save()
@@ -86,8 +199,8 @@ class FarmerProductList(APIView):
 
 class ProductListView(APIView):
     def get(self, request):
-        #products = Product.objects.all().values()
-        #return Response({"success": True, "products": list(products)}, status=status.HTTP_200_OK)
+        # products = Product.objects.all().values()
+        # return Response({"success": True, "products": list(products)}, status=status.HTTP_200_OK)
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

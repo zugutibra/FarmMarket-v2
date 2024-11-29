@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import *
 from django.contrib.auth.hashers import make_password
 
+
 class FarmerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Farmer
@@ -13,9 +14,24 @@ class FarmerSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        # Set the account status to 'pending' whenever updating the profile
+        # validated_data['account_status'] = 'pending'
+
         if 'password' in validated_data:
             validated_data['password'] = make_password(validated_data['password'])
+
         return super().update(instance, validated_data)
+
+    # Exclude the password field from API response
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation.pop('password', None)  # Remove 'password' field
+        return representation
+
+class CartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart
+        fields = '__all__'
 
 class BuyerSerializer(serializers.ModelSerializer):
     class Meta:
