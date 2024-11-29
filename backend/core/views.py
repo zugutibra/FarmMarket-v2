@@ -8,6 +8,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
+from django.db.models import Min
 
 
 class BuyerCartAPIView(APIView):
@@ -305,5 +306,85 @@ class UpdateProductView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Product.DoesNotExist:
             return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+class BuyerOrderView(APIView):
+    def get(self, request, user_id):
+        try:
+            buyer = get_object_or_404(Buyer, id=user_id)
+            orders = Order.objects.filter(buyer=buyer)
+            order_list = []
+            for order in orders:
+                order_products = OrderProduct.objects.filter(order=order)
+                product_list = []
+                for order_product in order_products:
+                    product = Product.objects.get(id=order_product.product_id)
+                    product_list.append({
+                        "quantity": order_product.quantity,
+                        "name": product.name,
+                        "price": product.price,
+                    })
+                order_list.append({
+                    "id": order.id,
+                    "order_date": order.order_date,
+                    "total_price": order.total_price,
+                    "status": order.status,
+                    "products": product_list,
+                })
+                
+            return Response({"orders": order_list}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+            
+
+
+class FarmerOrderView(APIView):
+    def get(self, request, farmer_id):
+        try:
+            farmer = get_object_or_404(Farmer, id=farmer_id)
+            distinct_orders = (OrderProduct.objects.filter(farmer_id=farmer_id).values("order_id").annotate(id=Min('id')))
+            unique_order_products = OrderProduct.objects.filter(id__in=[item['id'] for item in distinct_orders])
+            #distinct_order_ids = [item["order"] for item in distinct_orders]
+            #unique_order_products = OrderProduct.objects.filter(order__in=distinct_order_ids)
+            
+            order_list = []
+            for e in unique_order_products:
+                order = Order.objects.get(id=e.order_id)
+                order_products = OrderProduct.objects.filter(farmer_id=farmer_id, order_id=order.id)
+                product_list = []
+                for order_product in order_products:
+                    product = Product.objects.get(id=order_product.product_id)
+                    product_list.append({
+                        "quantity": order_product.quantity,
+                        "name": product.name,
+                        "price": product.price,
+                    })
+                order_list.append({
+                    "id": order.id,
+                    "order_date": order.order_date,
+                    "total_price": order.total_price,
+                    "status": order.status,
+                    "products": product_list,
+                })
+                
+            return Response({"orders": order_list}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+class MakeOrderView(APIView):
+    def post(self, request):
+        try:
+            cart = Cart.objects.filter(buyer_id=request.data.get("user_id"))
+            totalPrice = 0
+            for e in cart:
+                totalPrice += e.total_price
+            order = Order(buyer_id=request.data.get("user_id"), total_price=totalPrice)
+            order.save()
+            for e in cart:
+                product = Product.objects.get(id=e.product_id)
+                OrderProduct.objects.create(order_id=order.id, product_id=e.product_id, quantity=e.amount, farmer_id=product.farmer_id)
+            
+            return Response({"message": "Order placed successfully", "id": order.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

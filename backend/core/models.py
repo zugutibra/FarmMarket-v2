@@ -70,6 +70,9 @@ def out_of_stock(instance):
 def deleted_user():
     return "Deleted User"
 
+def deleted_product():
+    return "Deleted Product"
+
 def farmer_not_available():
     return "Farmer no longer available"
 
@@ -78,29 +81,35 @@ def astana_now():
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ("awaiting", 'Awaiting'),
-        ("delivery", 'Delivery'),
-        ("delivered", 'Delivered'),
+        ("awaiting", "Awaiting"),
+        ("accepted", "Accepted"),
+        ("delivery", "Delivery"),
+        ("completed", "Completed"),
     ]
-    
-    
-    product = models.ForeignKey(Product, on_delete=models.SET(out_of_stock))
+
     buyer = models.ForeignKey(Buyer, on_delete=models.SET(deleted_user))
-    farmer = models.ForeignKey(Farmer, on_delete=models.SET(farmer_not_available))
     order_date = models.DateTimeField(default=astana_now)
-    amount = models.IntegerField()
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="awaiting")
-    
+
     def __str__(self):
-        return self.product.name
+        return f"Order {self.id} by {self.buyer.name} ({self.status})"
+    
+class OrderProduct(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.SET(deleted_product))
+    farmer = models.ForeignKey(Farmer, on_delete=models.SET(deleted_user), null=True)
+    quantity = models.IntegerField()
+
+    def __str__(self):
+        return f"Order {self.order.id} - {self.product.name} x {self.quantity}"
     
     
 class Cart(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET(out_of_stock))
-    buyer = models.ForeignKey(Buyer, on_delete=models.SET("deleted user"))
+    buyer = models.ForeignKey(Buyer, on_delete=models.SET(deleted_user))
     amount = models.IntegerField()
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     
     def __str__(self):
-        return f"{self.id} {self.product.name}"
+        return f"Cart {self.id}: {self.amount} x {self.product.name if self.product else 'Product Unavailable'}"
