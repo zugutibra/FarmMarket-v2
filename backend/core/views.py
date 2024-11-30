@@ -1,7 +1,7 @@
 import logging
 
 from django.core.mail import send_mail
-from django.db.models import Min
+from django.db.models import Min, F
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import check_password, make_password
@@ -145,35 +145,50 @@ class BuyerOrderView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
 
-
 class UpdateOrderStatus(APIView):
     def get_object(self, order_id):
+        """
+        Helper method to fetch an order object by its ID.
+        """
         try:
             return Order.objects.get(id=order_id)
         except Order.DoesNotExist:
             raise NotFound("Order not found")
 
-    def get(self, request, order_id):
-        order = self.get_object(order_id)
-        serializer = OrderSerializer(order)
-        return Response(serializer.data)
-
     def patch(self, request, order_id):
-
+        """
+        PATCH method to update the status of an order.
+        """
         order = self.get_object(order_id)
 
-        status_value = request.data.get('status')
-
-        if not status_value:
+        # Extract the new status from the request
+        new_status = request.data.get('status')
+        if not new_status:
             return Response({"error": "Status is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Update the order status
-        order.status = status_value
-        order.save()
+        # If the new status is "completed", reduce product quantities
+        if new_status == "completed":
+            # Fetch all `OrderProduct` entries related to this order
+            ordered_products = OrderProduct.objects.filter(order=order)
 
-        # Return the updated order details
+            # Update product quantities
+            for ordered_product in ordered_products:
+                product = ordered_product.product
+
+                # Check if the stock is sufficient
+                if product.quantity < ordered_product.quantity:
+                    return Response(
+                        {"error": f"Insufficient stock for product {product.name}."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # Reduce the quantity of the product
+                product.quantity = F('quantity') - ordered_product.quantity
+                product.save()
+        order.status = new_status
+        order.save()
         serializer = OrderSerializer(order)
-        return Response(serializer.data, status=status.HTTP_200_OK)  # Correct usage of status.HTTP_200_OK
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 class FarmerOrderView(APIView):
     def get(self, request, farmer_id):
@@ -331,8 +346,6 @@ class FarmerProductList(APIView):
 
 class ProductListView(APIView):
     def get(self, request):
-        # products = Product.objects.all().values()
-        # return Response({"success": True, "products": list(products)}, status=status.HTTP_200_OK)
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)

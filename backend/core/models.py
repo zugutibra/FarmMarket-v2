@@ -93,6 +93,7 @@ class Order(models.Model):
         ("accepted", "Accepted"),
         ("delivery", "Delivery"),
         ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
     ]
 
     buyer = models.ForeignKey(Buyer, on_delete=models.SET(deleted_user))
