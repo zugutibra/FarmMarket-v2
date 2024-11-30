@@ -1,9 +1,45 @@
 import 'dart:convert';
-import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+
+import '../screens/buyer_screens/buyer_orders_screen.dart';
 
 class ApiService {
   final String baseUrl = "http://10.0.2.2:8000/api";
+
+  Future<List<Order>> getFarmerOrders(int farmerId) async {
+    try {
+      final response = await http.get(Uri.parse('$baseUrl/farmer/$farmerId/orders'));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body)['orders'];
+        return data.map((order) => Order.fromJson(order)).toList();
+      } else {
+        throw Exception('Failed to load orders');
+      }
+    } catch (e) {
+      // Handle network errors or other issues
+      throw Exception('Error fetching orders: $e');
+    }
+  }
+
+  Future<void> updateOrderStatus(int orderId, String status) async {
+    try {
+      final response = await http.patch(
+        Uri.parse('$baseUrl/orders/$orderId/status'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"status": status}),
+      );
+
+      if (response.statusCode == 200) {
+        print("Order status updated successfully!");
+      } else {
+        throw Exception(
+            "Failed to update order status: ${response.body}");
+      }
+    } catch (e) {
+      throw Exception("Error updating order status: $e");
+    }
+  }
 
   Future<Map<String, dynamic>> registerFarmer(Map<String, dynamic> data) async {
     try {
@@ -146,7 +182,44 @@ class ApiService {
     }
   }
 
+  Future<http.Response> placeOrderForAll(Map<String, dynamic> requestBody) async {
+    final url = Uri.parse('$baseUrl/make-order/${requestBody['user_id']}/');
+    try {
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode(requestBody), // Pass additional data if needed
+      );
 
+      return response; // Return the full response for error handling
+    } catch (e) {
+      throw Exception('Failed to place orders: $e');
+    }
+  }
+  Future<List<Order>> getBuyerOrders(int buyerId) async {
+    final url = Uri.parse('$baseUrl/orders/$buyerId/');
+    try {
+      final response = await http.get(url, headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      });
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> orderData = jsonDecode(response.body);
+        List<Order> orders = (orderData['orders'] as List)
+            .map((orderJson) => Order.fromJson(orderJson))
+            .toList();
+        return orders;
+      } else {
+        throw Exception('Failed to load orders');
+      }
+    } catch (e) {
+      throw Exception('Error: $e');
+    }
+  }
   Future<Map<String, dynamic>> addProduct(Map<String, dynamic> data) async {
     try {
       final response = await http.post(
@@ -172,7 +245,16 @@ class ApiService {
       };
     }
   }
+  Future<http.Response> deleteCartItem(int cartItemId) async {
+    final url = Uri.parse('$baseUrl/cart/delete/$cartItemId/');
+    final response = await http.delete(url);
 
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete cart item: ${response.body}');
+    }
+
+    return response;
+  }
   Future<http.Response> addToCart(Map<String, dynamic> cartData) async {
     try {
       final response = await http.post(

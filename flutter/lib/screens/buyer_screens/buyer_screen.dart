@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:untitled/screens/buyer_screens/buyer_orders_screen.dart';
 import 'package:untitled/screens/buyer_screens/buyer_products_screen.dart';
 
 import 'buyer_cart_screen.dart';
@@ -79,7 +80,7 @@ class _BuyerScreenState extends State<BuyerScreen> {
           userId: widget.userId,
         );
       case 2:
-        return CartPage(
+        return BuyerOrdersScreen(
           userId: widget.userId,
         );
       case 3:

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'farmer_add_product_screen.dart';
+import 'farmer_orders_screen.dart';
 import 'farmer_products_screen.dart';
 import 'farmer_profile_screen.dart';
 
@@ -81,9 +82,8 @@ class _FarmerScreenState extends State<FarmerScreen> {
           accountStatus: widget.accountStatus,
         );
       case 2:
-        return FarmerProductsScreen(
+        return FarmerOrdersScreen(
           farmerId: widget.farmerId,
-          accountStatus: widget.accountStatus,
         );
       case 3:
         return FarmerProfileScreen(

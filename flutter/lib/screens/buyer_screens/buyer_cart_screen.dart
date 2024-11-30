@@ -3,7 +3,7 @@ import '../../services/api_service.dart';
 
 class CartItem {
   final int id;
-  final String productName; // Matches "product_name" in JSON
+  final String productName;
   final int amount;
   final double totalPrice;
 
@@ -58,39 +58,64 @@ class _CartPageState extends State<CartPage> {
     return cartItems;
   }
 
-  Future<void> placeOrderForAll() async {
-    // try {
-    //   final apiService = ApiService();
-    //   final response = await apiService.placeOrder({
-    //     'user_id': widget.userId,
-    //     // You could send additional cart details if needed
-    //   });
-    //
-    //   if (response.statusCode == 200) {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       const SnackBar(content: Text("Order placed successfully for all items!")),
-    //     );
-    //
-    //     // Optionally, refresh the cart or redirect the user
-    //     setState(() {
-    //       _carts = _fetchBuyerCarts(widget.userId);
-    //     });
-    //   } else {
-    //     ScaffoldMessenger.of(context).showSnackBar(
-    //       SnackBar(content: Text("Failed to place order: ${response.body}")),
-    //     );
-    //   }
-    // } catch (e) {
-    //   ScaffoldMessenger.of(context).showSnackBar(
-    //     SnackBar(content: Text("Error placing order: $e")),
-    //   );
-    //}
+  Future<void> _deleteCartItem(int cartItemId) async {
+    final ApiService apiService = ApiService();
+    try {
+      final response = await apiService.deleteCartItem(cartItemId);
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Item deleted successfully!")),
+        );
+        setState(() {
+          _carts = _fetchBuyerCarts(widget.userId);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to delete item: ${response.body}")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error deleting item: $e")),
+      );
+    }
   }
+
+  Future<void> placeOrderForAll() async {
+      try {
+        final ApiService apiService = ApiService();
+        final response = await apiService.placeOrderForAll({'user_id': widget.userId});
+
+        if (response.statusCode == 201) {
+          // Orders placed successfully
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("All orders placed successfully!")),
+          );
+
+          // Refresh the cart
+          setState(() {
+            _carts = _fetchBuyerCarts(widget.userId);
+            totalPrice = 0.0; // Reset the total price
+          });
+        } else {
+          // Handle error response
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Failed to place orders: ${response.body}")),
+          );
+        }
+      } catch (e) {
+        // Handle exception
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error placing orders: $e")),
+        );
+      }
+    }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.blue,
         title: const Text('Your Cart'),
       ),
       body: FutureBuilder<List<CartItem>>(
@@ -119,21 +144,36 @@ class _CartPageState extends State<CartPage> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: Padding(
                         padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              cart.productName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    cart.productName,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "Amount: ${cart.amount}",
+                                    style: const TextStyle(color: Colors.black54),
+                                  ),
+                                  Text(
+                                    "Price: T${cart.totalPrice.toStringAsFixed(2)}",
+                                    style: const TextStyle(color: Colors.green),
+                                  ),
+                                ],
+                              ),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              "Amount: ${cart.amount}",
-                              style: const TextStyle(color: Colors.black54),
-                            ),
-                            Text(
-                              "Price: T${cart.totalPrice.toStringAsFixed(2)}",
-                              style: const TextStyle(color: Colors.green),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () {
+                                _deleteCartItem(cart.id);
+                              },
                             ),
                           ],
                         ),
