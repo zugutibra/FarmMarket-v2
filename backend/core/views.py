@@ -1,23 +1,19 @@
 import logging
 
 from django.core.mail import send_mail
+from django.db.models import Min, F
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render, redirect
 from django.contrib.auth.hashers import check_password, make_password
+from rest_framework.exceptions import NotFound
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import *
-from django.db.models import Min
 
 class DeleteCartItemView(APIView):
-    """
-    Class-based view to handle deleting a cart item.
-    """
-
     def delete(self, request, cart_item_id, *args, **kwargs):
         try:
-            # Try to find the cart item by its ID
             cart_item = Cart.objects.get(id=cart_item_id)
             cart_item.delete()
             return Response(
@@ -25,13 +21,11 @@ class DeleteCartItemView(APIView):
                 status=status.HTTP_200_OK,
             )
         except Cart.DoesNotExist:
-            # If the cart item does not exist, return a 404 error
             return Response(
                 {"error": "Cart item not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
         except Exception as e:
-            # For any other exception, return a 500 error with the exception message
             return Response(
                 {"error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -122,6 +116,133 @@ class FarmerProfileView(APIView):
                 {"error": "Farmer not found."},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+class BuyerOrderView(APIView):
+    def get(self, request, user_id):
+        try:
+            buyer = get_object_or_404(Buyer, id=user_id)
+            orders = Order.objects.filter(buyer=buyer)
+            order_list = []
+            for order in orders:
+                order_products = OrderProduct.objects.filter(order=order)
+                product_list = []
+                for order_product in order_products:
+                    product = Product.objects.get(id=order_product.product_id)
+                    product_list.append({
+                        "quantity": order_product.quantity,
+                        "name": product.name,
+                        "price": product.price,
+                    })
+                order_list.append({
+                    "id": order.id,
+                    "order_date": order.order_date,
+                    "total_price": order.total_price,
+                    "status": order.status,
+                    "products": product_list,
+                })
+
+            return Response({"orders": order_list}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+class UpdateOrderStatus(APIView):
+    def get_object(self, order_id):
+        """
+        Helper method to fetch an order object by its ID.
+        """
+        try:
+            return Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            raise NotFound("Order not found")
+
+    def patch(self, request, order_id):
+        """
+        PATCH method to update the status of an order.
+        """
+        order = self.get_object(order_id)
+
+        # Extract the new status from the request
+        new_status = request.data.get('status')
+        if not new_status:
+            return Response({"error": "Status is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # If the new status is "completed", reduce product quantities
+        if new_status == "completed":
+            # Fetch all `OrderProduct` entries related to this order
+            ordered_products = OrderProduct.objects.filter(order=order)
+
+            # Update product quantities
+            for ordered_product in ordered_products:
+                product = ordered_product.product
+
+                # Check if the stock is sufficient
+                if product.quantity < ordered_product.quantity:
+                    return Response(
+                        {"error": f"Insufficient stock for product {product.name}."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                # Reduce the quantity of the product
+                product.quantity = F('quantity') - ordered_product.quantity
+                product.save()
+        order.status = new_status
+        order.save()
+        serializer = OrderSerializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class FarmerOrderView(APIView):
+    def get(self, request, farmer_id):
+        try:
+            farmer = get_object_or_404(Farmer, id=farmer_id)
+            distinct_orders = (
+                OrderProduct.objects.filter(farmer_id=farmer_id).values("order_id").annotate(id=Min('id')))
+            unique_order_products = OrderProduct.objects.filter(id__in=[item['id'] for item in distinct_orders])
+            # distinct_order_ids = [item["order"] for item in distinct_orders]
+            # unique_order_products = OrderProduct.objects.filter(order__in=distinct_order_ids)
+
+            order_list = []
+            for e in unique_order_products:
+                order = Order.objects.get(id=e.order_id)
+                order_products = OrderProduct.objects.filter(farmer_id=farmer_id, order_id=order.id)
+                product_list = []
+                for order_product in order_products:
+                    product = Product.objects.get(id=order_product.product_id)
+                    product_list.append({
+                        "quantity": order_product.quantity,
+                        "name": product.name,
+                        "price": product.price,
+                    })
+                order_list.append({
+                    "id": order.id,
+                    "order_date": order.order_date,
+                    "total_price": order.total_price,
+                    "status": order.status,
+                    "products": product_list,
+                })
+
+            return Response({"orders": order_list}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+
+
+class MakeOrderView(APIView):
+    def post(self, request, user_id):
+        try:
+            cart = Cart.objects.filter(buyer_id=user_id)
+            totalPrice = 0
+            for e in cart:
+                totalPrice += e.total_price
+            order = Order(buyer_id=user_id, total_price=totalPrice)
+            order.save()
+            for e in cart:
+                product = Product.objects.get(id=e.product_id)
+                OrderProduct.objects.create(order_id=order.id, product_id=e.product_id, quantity=e.amount,
+                                            farmer_id=product.farmer_id)
+            cart.delete()
+            return Response({"message": "Order placed successfully", "id": order.id}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class BuyerProfileView(APIView):
     def put(self, request, user_id, format=None):
         try:
@@ -225,8 +346,6 @@ class FarmerProductList(APIView):
 
 class ProductListView(APIView):
     def get(self, request):
-        # products = Product.objects.all().values()
-        # return Response({"success": True, "products": list(products)}, status=status.HTTP_200_OK)
         products = Product.objects.all()
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -334,88 +453,7 @@ class UpdateProductView(APIView):
             return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-class BuyerOrderView(APIView):
-    def get(self, request, user_id):
-        try:
-            buyer = get_object_or_404(Buyer, id=user_id)
-            orders = Order.objects.filter(buyer=buyer)
-            order_list = []
-            for order in orders:
-                order_products = OrderProduct.objects.filter(order=order)
-                product_list = []
-                for order_product in order_products:
-                    product = Product.objects.get(id=order_product.product_id)
-                    product_list.append({
-                        "quantity": order_product.quantity,
-                        "name": product.name,
-                        "price": product.price,
-                    })
-                order_list.append({
-                    "id": order.id,
-                    "order_date": order.order_date,
-                    "total_price": order.total_price,
-                    "status": order.status,
-                    "products": product_list,
-                })
                 
-            return Response({"orders": order_list}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
-            
-
-
-class FarmerOrderView(APIView):
-    def get(self, request, farmer_id):
-        try:
-            farmer = get_object_or_404(Farmer, id=farmer_id)
-            distinct_orders = (OrderProduct.objects.filter(farmer_id=farmer_id).values("order_id").annotate(id=Min('id')))
-            unique_order_products = OrderProduct.objects.filter(id__in=[item['id'] for item in distinct_orders])
-            #distinct_order_ids = [item["order"] for item in distinct_orders]
-            #unique_order_products = OrderProduct.objects.filter(order__in=distinct_order_ids)
-            
-            order_list = []
-            for e in unique_order_products:
-                order = Order.objects.get(id=e.order_id)
-                order_products = OrderProduct.objects.filter(farmer_id=farmer_id, order_id=order.id)
-                product_list = []
-                for order_product in order_products:
-                    product = Product.objects.get(id=order_product.product_id)
-                    product_list.append({
-                        "quantity": order_product.quantity,
-                        "name": product.name,
-                        "price": product.price,
-                    })
-                order_list.append({
-                    "id": order.id,
-                    "order_date": order.order_date,
-                    "total_price": order.total_price,
-                    "status": order.status,
-                    "products": product_list,
-                })
-                
-            return Response({"orders": order_list}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
-
-class MakeOrderView(APIView):
-    def post(self, request):
-        try:
-            cart = Cart.objects.filter(buyer_id=request.data.get("user_id"))
-            totalPrice = 0
-            for e in cart:
-                totalPrice += e.total_price
-            order = Order(buyer_id=request.data.get("user_id"), total_price=totalPrice)
-            order.save()
-            for e in cart:
-                product = Product.objects.get(id=e.product_id)
-                OrderProduct.objects.create(order_id=order.id, product_id=e.product_id, quantity=e.amount, farmer_id=product.farmer_id)
-            cart.delete()
-            
-            return Response({"message": "Order placed successfully", "id": order.id}, status=status.HTTP_201_CREATED)
-        except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
         
 class api_admin_login(APIView):
     def post(self, request):
@@ -476,15 +514,10 @@ class api_admin_dashboard(APIView):
         return Response({"message":"Successfull"}, status=status.HTTP_200_OK)
     
     def get(self, request):
-        # if 'admin_id' not in request.session:
-        #     return Response({"message":"Admin not found"}, status=status.HTTP_404_NOT_FOUND)
         
         farmers = Farmer.objects.all()
         buyers = Buyer.objects.all()
-        # serfar = FarmerSerializer(farmers, many=True)
-        # serbuy = BuyerSerializer(buyers, many=True)
-        
-        # return Response({"farmers": serfar.data, "buyers": serbuy.data}, status=status.HTTP_200_OK)
+
         return Response({"farmers": farmers.values(), "buyers": buyers.values()}, status=status.HTTP_200_OK)
     
     

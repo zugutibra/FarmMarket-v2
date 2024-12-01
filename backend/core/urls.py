@@ -21,8 +21,9 @@ urlpatterns = [
     path('api/carts/<int:user_id>/', BuyerCartAPIView.as_view(), name='buyer_carts'),
     path('api/buyer/<int:user_id>/', BuyerProfileView.as_view(), name='view_buyer'),
     path('api/buyers/<int:user_id>/update/', BuyerProfileView.as_view(), name='update_buyer'),
-    path('api/buyer/order/<int:user_id>/', BuyerOrderView.as_view(), name='buyer_order_view'),
-    path('api/farmer/order/<int:farmer_id>/', FarmerOrderView.as_view(), name='farmer_order_view'),
-    path('api/buyer/make_order/', MakeOrderView.as_view(), name='make_order_view'),
     path('api/cart/delete/<int:cart_item_id>/', DeleteCartItemView.as_view(), name='delete_cart_item'),
+    path('api/orders/<int:user_id>/', BuyerOrderView.as_view(), name='buyer-orders'),
+    path('api/make-order/<int:user_id>/', MakeOrderView.as_view(), name='place-order'),
+    path('api/farmer/<int:farmer_id>/orders', FarmerOrderView.as_view(), name='farmer-orders'),
+    path('api/orders/<int:order_id>/status', UpdateOrderStatus.as_view(), name='update_order_status'),
 ]

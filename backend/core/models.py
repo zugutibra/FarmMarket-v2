@@ -5,6 +5,7 @@ import pytz
 
 ASTANA_TZ = pytz.timezone("Asia/Almaty")
 
+
 class Admin(models.Model):
     email = models.EmailField(unique=True)
     password = models.CharField(max_length=255)  # Store hashed passwords in production!
@@ -28,6 +29,7 @@ class Farmer(models.Model):
     def __str__(self):
         return self.name
 
+
 class Buyer(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
@@ -35,7 +37,6 @@ class Buyer(models.Model):
 
     def __str__(self):
         return self.name
-
 
 
 class Product(models.Model):
@@ -61,23 +62,30 @@ class Product(models.Model):
         on_delete=models.CASCADE,
         related_name="products"
     )
+
     def __str__(self):
         return self.name
-    
+
+
 def out_of_stock(instance):
     return f"{instance.name} out of stock"
-    
+
+
 def deleted_user():
     return "Deleted User"
+
 
 def deleted_product():
     return "Deleted Product"
 
+
 def farmer_not_available():
     return "Farmer no longer available"
 
+
 def astana_now():
     return now().astimezone(ASTANA_TZ)
+
 
 class Order(models.Model):
     STATUS_CHOICES = [
@@ -85,6 +93,7 @@ class Order(models.Model):
         ("accepted", "Accepted"),
         ("delivery", "Delivery"),
         ("completed", "Completed"),
+        ("cancelled", "Cancelled"),
     ]
 
     buyer = models.ForeignKey(Buyer, on_delete=models.SET(deleted_user))
@@ -94,7 +103,8 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} by {self.buyer.name} ({self.status})"
-    
+
+
 class OrderProduct(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.SET(deleted_product))
@@ -103,13 +113,13 @@ class OrderProduct(models.Model):
 
     def __str__(self):
         return f"Order {self.order.id} - {self.product.name} x {self.quantity}"
-    
-    
+
+
 class Cart(models.Model):
     product = models.ForeignKey(Product, on_delete=models.SET(out_of_stock))
     buyer = models.ForeignKey(Buyer, on_delete=models.SET(deleted_user))
     amount = models.IntegerField()
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    
+
     def __str__(self):
         return f"Cart {self.id}: {self.amount} x {self.product.name if self.product else 'Product Unavailable'}"
