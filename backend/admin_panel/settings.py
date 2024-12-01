@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'core',
     'rest_framework',
     'rest_framework_simplejwt',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -38,7 +39,45 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+# Session cookie settings
+SESSION_COOKIE_SAMESITE = 'None'  # Ensure this is set to 'None'
+SESSION_COOKIE_SECURE = True  # This is required when using 'None' for SameSite
+
+
+CORS_ALLOW_ALL_ORIGINS = True  # Allow all origins (not recommended for production)
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',  # Your frontend URL
+]
+SESSION_COOKIE_AGE = 3600  # Time in seconds before the session expires (1 hour)
+# settings.py
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Session storage in the database
+SESSION_COOKIE_NAME = 'sessionid'  # Ensure this matches the cookie sent with requests
+
+# settings.py
+
+SESSION_COOKIE_SECURE = True  # This ensures cookies are only sent over HTTPS in production
+
+
+
+
+
+# Enable credentials (cookies, HTTP authentication) to be included in CORS requests
+CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_WHITELIST = [
+    "http://localhost:3000",  # Add the specific frontend origin here
+]
+
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
+
 
 
 ROOT_URLCONF = 'admin_panel.urls'

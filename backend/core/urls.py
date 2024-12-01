@@ -3,8 +3,11 @@ from .views import *
 
 urlpatterns = [
     path('', admin_login, name='admin_login'),
+    path('api/', api_admin_login.as_view(), name='api_admin_login'),
     path('dashboard/', admin_dashboard, name='admin_dashboard'),
+    path('api/dashboard/', api_admin_dashboard.as_view(), name='api_admin_dashboard'),
     path('logout/', admin_logout, name='admin_logout'),
+    path('api/logout/', api_admin_logout.as_view(), name='api_admin_logout'),
     path('api/farmers/', FarmerRegistrationView.as_view(), name='farmer_registration'),
     path('api/buyers/', BuyerRegistrationView.as_view(), name='buyer_registration'),
     path('api/login/', LoginView.as_view(), name='login'),

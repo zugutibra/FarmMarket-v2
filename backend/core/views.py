@@ -410,7 +410,85 @@ class MakeOrderView(APIView):
             for e in cart:
                 product = Product.objects.get(id=e.product_id)
                 OrderProduct.objects.create(order_id=order.id, product_id=e.product_id, quantity=e.amount, farmer_id=product.farmer_id)
+            cart.delete()
             
             return Response({"message": "Order placed successfully", "id": order.id}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        
+class api_admin_login(APIView):
+    def post(self, request):
+        email = request.data.get("email")
+        password = request.data.get("password")
+        # Validate credentials
+        try:
+            admin = Admin.objects.get(email=email)                                                                                                                                                                                              
+            if password == admin.password:
+                request.session['admin_id'] = admin.id
+                print(request.session.items())  # Log the session items to verify
+                request.session.save()
+                return Response({"admin_id": admin.id}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({"message":"Invalid password"}, status=status.HTTP_404_NOT_FOUND)
+        except Admin.DoesNotExist:
+            return Response({"message":"Admin not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+    def get(self, request):
+        return Response({"message":"Succcessfull"}, status=status.HTTP_201_CREATED)
+        
+class api_admin_dashboard(APIView):
+    def post(self, request):
+        print(request.session)  # Log the session data to see what's stored
+        print(f"Session data: {request.session.items()}")
+
+        if 'admin_id' not in request.session:
+            return Response({"message":"Admin not found"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        farmers = Farmer.objects.all()
+        buyers = Buyer.objects.all()
+        
+        farmer_id = request.data.get("farmer_id")
+        action = request.data.get("action")
+
+        # Fetch the Farmer object
+        farmer = get_object_or_404(Farmer, id=farmer_id)
+
+        # Determine the action and update account status
+        if action == "approve":
+            farmer.account_status = "approved"
+            decision_message = "Congratulations! Your account has been approved."
+        elif action == "reject":
+            farmer.account_status = "rejected"
+            decision_message = "We regret to inform you that your account has been rejected."
+
+        farmer.save()
+
+        # Send email to the farmer
+        send_mail(
+            subject="Account Decision Notification",
+            message=f"Dear {farmer.name},\n\n{decision_message}\n\nThank you.",
+            from_email="ibrabekturgan@gmail.com",  # Replace with your email
+            recipient_list=[farmer.email],
+            fail_silently=False,
+        )
+        # Redirect to avoid re-submission on refresh
+        return Response({"message":"Successfull"}, status=status.HTTP_200_OK)
+    
+    def get(self, request):
+        # if 'admin_id' not in request.session:
+        #     return Response({"message":"Admin not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        farmers = Farmer.objects.all()
+        buyers = Buyer.objects.all()
+        # serfar = FarmerSerializer(farmers, many=True)
+        # serbuy = BuyerSerializer(buyers, many=True)
+        
+        # return Response({"farmers": serfar.data, "buyers": serbuy.data}, status=status.HTTP_200_OK)
+        return Response({"farmers": farmers.values(), "buyers": buyers.values()}, status=status.HTTP_200_OK)
+    
+    
+class api_admin_logout(APIView):
+    def post(self, request):
+        request.session.flush()
+        return Response({"message":"Successfull"}, status=status.HTTP_200_OK)
