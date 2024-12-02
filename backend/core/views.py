@@ -33,8 +33,8 @@ class DeleteCartItemView(APIView):
 
 class BuyerCartAPIView(APIView):
     def get(self, request, user_id):
-        carts = Cart.objects.filter(buyer__id=user_id)  # Filter carts by buyer
-        serializer = CartSerializer(carts, many=True)   # Serialize all carts
+        carts = Cart.objects.filter(buyer__id=user_id)
+        serializer = CartSerializer(carts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class AddToCartView(APIView):
@@ -44,21 +44,19 @@ class AddToCartView(APIView):
             product_id = request.data.get('product_id')
             quantity = request.data.get('quantity')
 
-            # Validate fields
             if not user_id or not product_id or not quantity:
                 return Response({"error": "Missing fields"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Fetch related objects
             buyer = Buyer.objects.get(pk=user_id)
             product = Product.objects.get(pk=product_id)
 
             if product.quantity < quantity:
                 return Response({"error": "Insufficient stock"}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Calculate total price
+            
             total_price = product.price * quantity
 
-            # Create cart entry
+            
             cart_item = Cart.objects.create(
                 product=product,
                 buyer=buyer,
@@ -82,10 +80,10 @@ class FarmerProfileView(APIView):
         except Farmer.DoesNotExist:
             return Response({'message': 'Farmer not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Log incoming request data
+        
         print(f"Incoming data: {request.data}")
 
-        # Validate and update the data
+        
         serializer = FarmerSerializer(farmer, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -96,7 +94,7 @@ class FarmerProfileView(APIView):
 
     def get(self, request, farmer_id=None, email=None):
         try:
-            # Fetch farmer by ID or email
+            
             if farmer_id:
                 farmer = Farmer.objects.get(id=farmer_id)
             elif email:
@@ -107,7 +105,7 @@ class FarmerProfileView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Serialize farmer data
+            
             serializer = FarmerSerializer(farmer)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -161,28 +159,28 @@ class UpdateOrderStatus(APIView):
         """
         order = self.get_object(order_id)
 
-        # Extract the new status from the request
+        
         new_status = request.data.get('status')
         if not new_status:
             return Response({"error": "Status is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # If the new status is "completed", reduce product quantities
+        
         if new_status == "completed":
-            # Fetch all `OrderProduct` entries related to this order
+            
             ordered_products = OrderProduct.objects.filter(order=order)
 
-            # Update product quantities
+            
             for ordered_product in ordered_products:
                 product = ordered_product.product
 
-                # Check if the stock is sufficient
+                
                 if product.quantity < ordered_product.quantity:
                     return Response(
                         {"error": f"Insufficient stock for product {product.name}."},
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
-                # Reduce the quantity of the product
+                
                 product.quantity = F('quantity') - ordered_product.quantity
                 product.save()
         order.status = new_status
@@ -197,8 +195,8 @@ class FarmerOrderView(APIView):
             distinct_orders = (
                 OrderProduct.objects.filter(farmer_id=farmer_id).values("order_id").annotate(id=Min('id')))
             unique_order_products = OrderProduct.objects.filter(id__in=[item['id'] for item in distinct_orders])
-            # distinct_order_ids = [item["order"] for item in distinct_orders]
-            # unique_order_products = OrderProduct.objects.filter(order__in=distinct_order_ids)
+            
+            
 
             order_list = []
             for e in unique_order_products:
@@ -250,10 +248,10 @@ class BuyerProfileView(APIView):
         except Farmer.DoesNotExist:
             return Response({'message': 'Buyer not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Log incoming request data
+        
         print(f"Incoming data: {request.data}")
 
-        # Validate and update the data
+        
         serializer = BuyerSerializer(buyer, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -264,7 +262,7 @@ class BuyerProfileView(APIView):
 
     def get(self, request, user_id=None, email=None):
         try:
-            # Fetch farmer by ID or email
+            
             if user_id:
                 buyer = Buyer.objects.get(id=user_id)
             elif email:
@@ -275,7 +273,7 @@ class BuyerProfileView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Serialize farmer data
+            
             serializer = BuyerSerializer(buyer)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -292,16 +290,16 @@ class FarmerRegistrationView(APIView):
             send_mail(
                 subject="Account Decision Notification",
                 message=f"Dear {serializer.validated_data['name']},\n\n{decision_message}\n\nThank you.",
-                from_email="ibrabekturgan@gmail.com",  # Replace with your email
+                from_email="ibrabekturgan@gmail.com",  
                 recipient_list=[serializer.validated_data['email']],
                 fail_silently=False,
             )
-            serializer.save(account_status='pending')  # Default status
+            serializer.save(account_status='pending')  
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Buyer Registration
+
 class BuyerRegistrationView(APIView):
     def post(self, request):
         serializer = BuyerSerializer(data=request.data)
@@ -333,7 +331,7 @@ class AddProductView(APIView):
 class FarmerProductList(APIView):
     def get(self, request, farmer_id):
         try:
-            # Fetch the products for the farmer
+            
             products = Product.objects.filter(farmer_id=farmer_id)
             if products.exists():
                 products_data = [{'id': product.id, 'name': product.name, 'description': product.description,
@@ -350,7 +348,7 @@ class ProductListView(APIView):
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-# Login
+
 class LoginView(APIView):
     def post(self, request):
         email = request.data.get('email')
@@ -361,7 +359,7 @@ class LoginView(APIView):
                 return Response({
                     "id": farmer.id,
                     "role": "farmer",
-                    "account_status": farmer.account_status  # Add account status here
+                    "account_status": farmer.account_status  
                 }, status=status.HTTP_200_OK)
         except Farmer.DoesNotExist:
             pass
@@ -387,10 +385,10 @@ def admin_dashboard(request):
         farmer_id = request.POST.get("farmer_id")
         action = request.POST.get("action")
 
-        # Fetch the Farmer object
+        
         farmer = get_object_or_404(Farmer, id=farmer_id)
 
-        # Determine the action and update account status
+        
         if action == "approve":
             farmer.account_status = "approved"
             decision_message = "Congratulations! Your account has been approved."
@@ -400,16 +398,16 @@ def admin_dashboard(request):
 
         farmer.save()
 
-        # Send email to the farmer
+        
         send_mail(
             subject="Account Decision Notification",
             message=f"Dear {farmer.name},\n\n{decision_message}\n\nThank you.",
-            from_email="ibrabekturgan@gmail.com",  # Replace with your email
+            from_email="ibrabekturgan@gmail.com",  
             recipient_list=[farmer.email],
             fail_silently=False,
         )
 
-        # Redirect to avoid re-submission on refresh
+        
         return redirect("admin_dashboard")
 
     return render(request, "core/admin_dashboard.html", {
@@ -422,7 +420,7 @@ def admin_login(request):
     if request.method == "POST":
         email = request.POST.get("email")
         password = request.POST.get("password")
-        # Validate credentials
+        
         try:
             admin = Admin.objects.get(email=email)
             if password == admin.password:
@@ -453,46 +451,46 @@ class UpdateProductView(APIView):
             return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                
-        
+
+
 class api_admin_login(APIView):
     def post(self, request):
         email = request.data.get("email")
         password = request.data.get("password")
-        # Validate credentials
+        
         try:
             admin = Admin.objects.get(email=email)                                                                                                                                                                                              
             if password == admin.password:
                 request.session['admin_id'] = admin.id
-                print(request.session.items())  # Log the session items to verify
+                print(request.session.items())  
                 request.session.save()
                 return Response({"admin_id": admin.id}, status=status.HTTP_201_CREATED)
             else:
                 return Response({"message":"Invalid password"}, status=status.HTTP_404_NOT_FOUND)
         except Admin.DoesNotExist:
             return Response({"message":"Admin not found"}, status=status.HTTP_404_NOT_FOUND)
-        
+
     def get(self, request):
         return Response({"message":"Succcessfull"}, status=status.HTTP_201_CREATED)
-        
+
 class api_admin_dashboard(APIView):
     def post(self, request):
-        print(request.session)  # Log the session data to see what's stored
+        print(request.session)  
         print(f"Session data: {request.session.items()}")
 
         if 'admin_id' not in request.session:
             return Response({"message":"Admin not found"}, status=status.HTTP_401_UNAUTHORIZED)
-        
+
         farmers = Farmer.objects.all()
         buyers = Buyer.objects.all()
-        
+
         farmer_id = request.data.get("farmer_id")
         action = request.data.get("action")
 
-        # Fetch the Farmer object
+        
         farmer = get_object_or_404(Farmer, id=farmer_id)
 
-        # Determine the action and update account status
+        
         if action == "approve":
             farmer.account_status = "approved"
             decision_message = "Congratulations! Your account has been approved."
@@ -502,25 +500,25 @@ class api_admin_dashboard(APIView):
 
         farmer.save()
 
-        # Send email to the farmer
+        
         send_mail(
             subject="Account Decision Notification",
             message=f"Dear {farmer.name},\n\n{decision_message}\n\nThank you.",
-            from_email="ibrabekturgan@gmail.com",  # Replace with your email
+            from_email="ibrabekturgan@gmail.com",  
             recipient_list=[farmer.email],
             fail_silently=False,
         )
-        # Redirect to avoid re-submission on refresh
-        return Response({"message":"Successfull"}, status=status.HTTP_200_OK)
-    
-    def get(self, request):
         
+        return Response({"message":"Successfull"}, status=status.HTTP_200_OK)
+
+    def get(self, request):
+
         farmers = Farmer.objects.all()
         buyers = Buyer.objects.all()
 
         return Response({"farmers": farmers.values(), "buyers": buyers.values()}, status=status.HTTP_200_OK)
-    
-    
+
+
 class api_admin_logout(APIView):
     def post(self, request):
         request.session.flush()

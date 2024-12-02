@@ -8,7 +8,7 @@ ASTANA_TZ = pytz.timezone("Asia/Almaty")
 
 class Admin(models.Model):
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255)  # Store hashed passwords in production!
+    password = models.CharField(max_length=255)
 
     def __str__(self):
         return self.email
@@ -17,7 +17,7 @@ class Admin(models.Model):
 class Farmer(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255)  # Store hashed passwords for security
+    password = models.CharField(max_length=255)
     farm_name = models.CharField(max_length=100)
     farm_location = models.CharField(max_length=255)
     account_status = models.CharField(
@@ -33,7 +33,7 @@ class Farmer(models.Model):
 class Buyer(models.Model):
     name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    password = models.CharField(max_length=255)  # Store hashed passwords for security
+    password = models.CharField(max_length=255)
 
     def __str__(self):
         return self.name
