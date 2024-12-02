@@ -14,7 +14,6 @@ class Product {
     required this.price,
   });
 
-  // Update the fromJson constructor to handle id
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       quantity: json['quantity'],
@@ -95,6 +94,7 @@ class _BuyerOrdersScreenState extends State<BuyerOrdersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.blueAccent,
         title: const Text("Your Orders"),
       ),
@@ -126,7 +126,6 @@ class _BuyerOrdersScreenState extends State<BuyerOrdersScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Order ID and Date
                       Text(
                         "Order ID: ${order.id}",
                         style: const TextStyle(
@@ -153,7 +152,6 @@ class _BuyerOrdersScreenState extends State<BuyerOrdersScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      // Order Status
                       Text(
                         "Status: ${order.status}",
                         style: TextStyle(
@@ -162,7 +160,6 @@ class _BuyerOrdersScreenState extends State<BuyerOrdersScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      // Products Section
                       const Text(
                         "Products:",
                         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),

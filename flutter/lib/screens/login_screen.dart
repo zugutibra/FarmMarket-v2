@@ -16,7 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final ApiService apiService = ApiService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   String email = '', password = '';
-  bool isPasswordVisible = false; // New state variable to control visibility
+  bool isPasswordVisible = false;
 
   Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
@@ -61,11 +61,11 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                Image.asset(
-                  'assets/images/logo.jpg', // Replace with your image asset
-                  height: 150,
-                ),
-                const SizedBox(height: 20),
+                // Image.asset(
+                //   'assets/images/logo.jpg'
+                //   height: 150,
+                // ),
+                // const SizedBox(height: 20),
                 const Text(
                   'Welcome!',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             },
                           ),
                         ),
-                        obscureText: !isPasswordVisible, // Toggle visibility
+                        obscureText: !isPasswordVisible,
                         validator: (value) =>
                         value!.isEmpty ? 'Please enter your password' : null,
                         onSaved: (value) => password = value!,

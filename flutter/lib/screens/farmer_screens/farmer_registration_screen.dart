@@ -4,6 +4,8 @@ import '../../services/api_service.dart';
 import 'farmer_screen.dart';
 
 class FarmerRegistrationScreen extends StatefulWidget {
+  const FarmerRegistrationScreen({super.key});
+
   @override
   _FarmerRegistrationScreenState createState() => _FarmerRegistrationScreenState();
 }
@@ -12,7 +14,6 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
   final ApiService apiService = ApiService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // Controllers to manage input fields
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
@@ -35,7 +36,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
         final response = await apiService.registerFarmer(data);
         if (response.containsKey('id')) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Registration Successful!")),
+            const SnackBar(content: Text("Registration Successful!")),
           );
           Navigator.push(
             context,
@@ -58,7 +59,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
       }
     } else if (!agreeToTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("You must agree to the terms and conditions.")),
+        const SnackBar(content: Text("You must agree to the terms and conditions.")),
       );
     }
   }
@@ -66,7 +67,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Sign up")),
+      appBar: AppBar(title: const Text("Sign up")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
@@ -75,18 +76,18 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   "Sign up",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 Text(
                   "Create an account to get started",
                   style: TextStyle(color: Colors.grey[700]),
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 TextFormField(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Name",
                     border: OutlineInputBorder(),
                   ),
@@ -94,9 +95,9 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                   value!.isEmpty ? "Please enter your name" : null,
                   onSaved: (value) => name = value!,
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 TextFormField(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Email Address",
                     border: OutlineInputBorder(),
                   ),
@@ -104,12 +105,12 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                   value!.isEmpty ? "Please enter your email" : null,
                   onSaved: (value) => email = value!,
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 TextFormField(
                   controller: _passwordController,
                   decoration: InputDecoration(
                     labelText: "Password",
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
                         isPasswordVisible
@@ -123,16 +124,16 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                       },
                     ),
                   ),
-                  obscureText: !isPasswordVisible, // Toggle visibility
+                  obscureText: !isPasswordVisible,
                   validator: (value) =>
                   value!.isEmpty ? "Please create a password" : null,
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 TextFormField(
                   controller: _confirmPasswordController,
                   decoration: InputDecoration(
                     labelText: "Confirm Password",
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                     suffixIcon: IconButton(
                       icon: Icon(
                         isPasswordVisible2
@@ -151,9 +152,9 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                       ? "Passwords do not match"
                       : null,
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 TextFormField(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Farm Name",
                     border: OutlineInputBorder(),
                   ),
@@ -161,9 +162,9 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                   value!.isEmpty ? "Please enter your farm name" : null,
                   onSaved: (value) => farmName = value!,
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 TextFormField(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     labelText: "Farm Location",
                     border: OutlineInputBorder(),
                   ),
@@ -171,7 +172,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                   value!.isEmpty ? "Please enter your farm location" : null,
                   onSaved: (value) => farmLocation = value!,
                 ),
-                SizedBox(height: 15),
+                const SizedBox(height: 15),
                 Row(
                   children: [
                     Checkbox(
@@ -184,7 +185,7 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                     ),
                     Expanded(
                       child: RichText(
-                        text: TextSpan(
+                        text: const TextSpan(
                           text: "I’ve read and agree with the ",
                           style: TextStyle(color: Colors.black),
                           children: [
@@ -203,16 +204,16 @@ class _FarmerRegistrationScreenState extends State<FarmerRegistrationScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _registerFarmer,
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 50),
+                    minimumSize: const Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: Text("Sign up"),
+                  child: const Text("Sign up"),
                 ),
               ],
             ),

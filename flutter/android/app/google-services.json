@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "628911751714",
+    "project_id": "farm-market-e2c7e",
+    "storage_bucket": "farm-market-e2c7e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:628911751714:android:d0d6bea52e9c8e9829007b",
+        "android_client_info": {
+          "package_name": "com.example.untitled"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXBd4IfODzlSiaEW5G-qXqWNRrer2y1lM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -49,8 +49,6 @@ class _CartPageState extends State<CartPage> {
     final ApiService apiService = ApiService();
     final List<dynamic> cartData = await apiService.getBuyerCarts(userId);
     final cartItems = cartData.map((data) => CartItem.fromJson(data)).toList();
-
-    // Calculate total price
     setState(() {
       totalPrice = cartItems.fold(0.0, (sum, item) => sum + item.totalPrice);
     });
@@ -87,24 +85,20 @@ class _CartPageState extends State<CartPage> {
         final response = await apiService.placeOrderForAll({'user_id': widget.userId});
 
         if (response.statusCode == 201) {
-          // Orders placed successfully
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("All orders placed successfully!")),
           );
 
-          // Refresh the cart
           setState(() {
             _carts = _fetchBuyerCarts(widget.userId);
-            totalPrice = 0.0; // Reset the total price
+            totalPrice = 0.0;
           });
         } else {
-          // Handle error response
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Failed to place orders: ${response.body}")),
           );
         }
       } catch (e) {
-        // Handle exception
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("Error placing orders: $e")),
         );
@@ -115,6 +109,7 @@ class _CartPageState extends State<CartPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.blue,
         title: const Text('Your Cart'),
       ),

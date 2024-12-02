@@ -57,8 +57,6 @@ class _FarmerAddProductScreenState extends State<FarmerAddProductScreen> {
         });
 
         setState(() => _isLoading = false);
-
-        // Show the message here
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response['message'])),
         );
@@ -77,19 +75,18 @@ class _FarmerAddProductScreenState extends State<FarmerAddProductScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Disable the form if the account is pending or rejected
     bool isAccountAllowed = widget.accountStatus != 'pending' && widget.accountStatus != 'rejected';
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue,  // Match the image style
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.blue,
         title: const Text("Add New Product"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Categories row
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -121,7 +118,6 @@ class _FarmerAddProductScreenState extends State<FarmerAddProductScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Form
             Expanded(
               child: Form(
                 key: _formKey,
@@ -158,7 +154,6 @@ class _FarmerAddProductScreenState extends State<FarmerAddProductScreen> {
       ),
     );
   }
-  // Text field builder
   Widget _buildTextField(String label, Function(String?)? onSaved, {TextInputType? keyboardType}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),

@@ -19,11 +19,8 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch farmer data from API
     buyerData = ApiService().getBuyer(userId: widget.userId);
   }
-
-  // Method to handle profile update
   Future<void> _updateProfile() async {
     if (_formKey.currentState!.validate()) {
       final response = await ApiService().updateBuyerProfile({
@@ -31,8 +28,6 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
         'name': _name,
         'email': _email,
       });
-
-      // Debug the response
       print('Response: $response');
 
       if (response['success']) {
@@ -52,6 +47,7 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Farmer Profile'),
         backgroundColor: Colors.blue,
         actions: [
@@ -67,7 +63,6 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
                       LoginScreen(),
                 ),
               );
-              // Handle logout functionality here
             },
           ),
         ],
@@ -94,13 +89,12 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Profile Picture
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.grey[300],
                       child: ClipOval(
                         child: Image.asset(
-                          'assets/images/default_avatar.jpg', // Replace with farmer image URL if available
+                          'assets/images/default_avatar.jpg',
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
@@ -108,8 +102,6 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Name, Email, Farm Name, and Farm Location as Editable Fields
                     TextFormField(
                       initialValue: _name,
                       decoration: InputDecoration(labelText: 'Name'),
@@ -134,7 +126,6 @@ class _BuyerProfileScreenState extends State<BuyerProfileScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter an email';
                         }
-                        // You can add more validations for email format here
                         return null;
                       },
                     ),

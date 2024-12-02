@@ -46,7 +46,7 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
     _orders.then((orders) {
       setState(() {
         allOrders = orders;
-        filteredOrders = orders; // Show all orders initially
+        filteredOrders = orders;
       });
     });
   }
@@ -115,12 +115,12 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.blue,
         title: const Text("Farmer Orders"),
       ),
       body: Column(
         children: [
-          // Filter Buttons
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -130,12 +130,11 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
                 _buildFilterButton("Accepted", "accepted"),
                 _buildFilterButton("Delivery", "delivery"),
                 _buildFilterButton("Completed", "completed"),
+                _buildFilterButton("Cancelled", "cancelled"),
               ],
             ),
           ),
           const Divider(),
-
-          // Orders List
           Expanded(
             child: FutureBuilder<List<Order>>(
               future: _orders,
@@ -163,8 +162,6 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
       ),
     );
   }
-
-  // Order Card
   Widget _buildOrderCard(Order order) {
     String nextStatus = getNextStatus(order.status);
 
@@ -270,8 +267,6 @@ class _FarmerOrdersScreenState extends State<FarmerOrdersScreen> {
       ),
     );
   }
-
-  // Filter Button
   Widget _buildFilterButton(String label, String status) {
     return GestureDetector(
       onTap: () => filterOrders(status),

@@ -11,7 +11,6 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
   final ApiService apiService = ApiService();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // Controllers to manage input fields
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
@@ -119,7 +118,7 @@ class _BuyerRegistrationScreenState extends State<BuyerRegistrationScreen> {
                       },
                     ),
                   ),
-                  obscureText: !isPasswordVisible, // Toggle visibility
+                  obscureText: !isPasswordVisible,
                   validator: (value) =>
                   value!.isEmpty ? "Please create a password" : null,
                 ),

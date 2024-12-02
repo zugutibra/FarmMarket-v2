@@ -7,16 +7,16 @@ import 'farmer_profile_screen.dart';
 
 class FarmerScreen extends StatefulWidget {
   final int farmerId;
-  final String accountStatus; // Account status passed from login
+  final String accountStatus;
 
-  const FarmerScreen({Key? key, required this.farmerId, required this.accountStatus}) : super(key: key);
+  const FarmerScreen({super.key, required this.farmerId, required this.accountStatus});
 
   @override
   _FarmerScreenState createState() => _FarmerScreenState();
 }
 
 class _FarmerScreenState extends State<FarmerScreen> {
-  int _currentIndex = 0; // Current tab index
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +29,9 @@ class _FarmerScreenState extends State<FarmerScreen> {
             _currentIndex = index;
           });
         },
-        selectedItemColor: Colors.blue, // Color for the selected item
-        unselectedItemColor: Colors.grey, // Color for unselected items
-        backgroundColor: Colors.white, // Background color of the navigation bar
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.list),
@@ -91,7 +91,7 @@ class _FarmerScreenState extends State<FarmerScreen> {
           accountStatus: widget.accountStatus,
         );
       default:
-        return Center(child: Text("Error loading page"));
+        return const Center(child: Text("Error loading page"));
     }
   }
 }

@@ -74,10 +74,8 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
   void filterProducts() {
     setState(() {
       if (selectedCategoryIndex == 0) {
-        // Show all products for "All Products"
         filteredProducts = allProducts;
       } else {
-        // Filter by category
         String selectedCategory = categories[selectedCategoryIndex];
         filteredProducts = allProducts
             .where((product) => product['category'] == categories_in_db[selectedCategory])
@@ -90,13 +88,13 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          backgroundColor: Colors.blue,  // Match the image style
+          automaticallyImplyLeading: false,
+          backgroundColor: Colors.blue,
           title: const Text("My Products"),
         ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Categories Row
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(
@@ -107,7 +105,7 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
                   onTap: () {
                     setState(() {
                       selectedCategoryIndex = index;
-                      filterProducts(); // Apply filter when a category is selected
+                      filterProducts();
                     });
                   },
                   child: Container(
@@ -128,8 +126,6 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
               }).toList(),
             ),
           ),
-
-          // Body Content
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -166,18 +162,14 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
   Widget buildProductCard(dynamic product) {
     return GestureDetector(
       onTap: () async {
-        // Navigate to the EditProductScreen
         final updatedProduct = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => EditProductScreen(product: product),
           ),
         );
-
-        // If the product was updated, update it in the list
         if (updatedProduct != null) {
           setState(() {
-            // Find the index of the edited product and update it
             final index = filteredProducts.indexWhere((p) => p['id'] == updatedProduct['id']);
             if (index != -1) {
               filteredProducts[index] = updatedProduct;
@@ -201,7 +193,6 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Product Image Placeholder
             Container(
               height: 120,
               width: double.infinity,
@@ -211,8 +202,6 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
               ),
               child: const Icon(Icons.image, size: 50, color: Colors.grey),
             ),
-
-            // Product Name
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Text(
@@ -231,7 +220,6 @@ class _FarmerProductsScreenState extends State<FarmerProductsScreen> {
                 ),
               ),
             ),
-            // Product Price
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8.0),
               child: Text(

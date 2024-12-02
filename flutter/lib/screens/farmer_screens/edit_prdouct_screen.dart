@@ -95,7 +95,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Category selection
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
@@ -127,7 +126,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
               ),
             ),
             const SizedBox(height: 16),
-            // Form
             Expanded(
               child: Form(
                 key: _formKey,
@@ -161,7 +159,6 @@ class _EditProductScreenState extends State<EditProductScreen> {
     );
   }
 
-  // Text field builder
   Widget _buildTextField(String label, Function(String?)? onSaved,
       {TextInputType? keyboardType, required String initialValue}) {
     return Padding(

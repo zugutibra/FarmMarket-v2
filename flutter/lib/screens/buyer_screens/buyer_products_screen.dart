@@ -97,12 +97,6 @@ class _BuyerProductsScreenState extends State<BuyerProductsScreen> {
         'product_id': product['id'],
         'quantity': quantity,
       });
-
-      // Debugging: print the response status and body
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
-      // Check if the status code is 200 (OK)
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response.body)),
@@ -163,8 +157,9 @@ class _BuyerProductsScreenState extends State<BuyerProductsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: Colors.blue,
-        title: const Text("My Products"),
+        title: const Text("Products"),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -16,7 +16,7 @@ class BuyerScreen extends StatefulWidget {
 }
 
 class _BuyerScreenState extends State<BuyerScreen> {
-  int _currentIndex = 0; // Current tab index
+  int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -29,9 +29,9 @@ class _BuyerScreenState extends State<BuyerScreen> {
             _currentIndex = index;
           });
         },
-        selectedItemColor: Colors.blue, // Color for the selected item
-        unselectedItemColor: Colors.grey, // Color for unselected items
-        backgroundColor: Colors.white, // Background color of the navigation bar
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.white,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.list),

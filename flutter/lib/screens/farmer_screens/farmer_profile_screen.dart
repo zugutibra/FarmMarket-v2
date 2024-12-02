@@ -20,11 +20,9 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch farmer data from API
     farmerData = ApiService().getFarmer(farmerId: widget.farmerId);
   }
 
-  // Method to handle profile update
   Future<void> _updateProfile() async {
     if (_formKey.currentState!.validate()) {
       final response = await ApiService().updateFarmerProfile({
@@ -36,7 +34,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
         'account_status': widget.accountStatus,
       });
 
-      // Debug the response
       print('Response: $response');
 
       if (response['success']) {
@@ -56,13 +53,13 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text('Farmer Profile'),
         backgroundColor: Colors.blue,
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: (
-
                 ) {
               Navigator.push(
                 context,
@@ -71,7 +68,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       LoginScreen(),
                 ),
               );
-              // Handle logout functionality here
             },
           ),
         ],
@@ -100,13 +96,12 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Profile Picture
                     CircleAvatar(
                       radius: 40,
                       backgroundColor: Colors.grey[300],
                       child: ClipOval(
                         child: Image.asset(
-                          'assets/images/default_avatar.jpg', // Replace with farmer image URL if available
+                          'assets/images/default_avatar.jpg',
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
@@ -114,8 +109,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Name, Email, Farm Name, and Farm Location as Editable Fields
                     TextFormField(
                       initialValue: _name,
                       decoration: InputDecoration(labelText: 'Name'),
@@ -140,7 +133,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                         if (value == null || value.isEmpty) {
                           return 'Please enter an email';
                         }
-                        // You can add more validations for email format here
                         return null;
                       },
                     ),
@@ -173,8 +165,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-
-                    // Account Status Section
                     if (widget.accountStatus != 'approved')
                       Container(
                         padding: const EdgeInsets.all(10),
@@ -190,8 +180,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                         style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     const SizedBox(height: 20),
-
-                    // Submit Changes Button
                     ElevatedButton(
                       onPressed: _updateProfile,
                       style: ElevatedButton.styleFrom(

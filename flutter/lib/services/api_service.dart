@@ -17,7 +17,6 @@ class ApiService {
         throw Exception('Failed to load orders');
       }
     } catch (e) {
-      // Handle network errors or other issues
       throw Exception('Error fetching orders: $e');
     }
   }
@@ -31,7 +30,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        print("Order status updated successfully!");
+        return json.decode(response.body);
       } else {
         throw Exception(
             "Failed to update order status: ${response.body}");
@@ -48,12 +47,9 @@ class ApiService {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(data),
       );
-      print("Response status: ${response.statusCode}");
-      print("Response body: ${response.body}");
       return jsonDecode(response.body);
     } catch (e) {
-      print("Error during POST request: $e");
-      throw e;
+      rethrow;
     }
   }
 
@@ -66,17 +62,12 @@ class ApiService {
         },
         body: json.encode(data),
       );
-
-      // Check the status code and log the response
       if (response.statusCode == 200) {
-        print('Response body: ${response.body}');
         return json.decode(response.body);
       } else {
-        print('Error response: ${response.body}');
         throw Exception('Failed to update profile');
       }
     } catch (e) {
-      print('Exception: $e');
       rethrow;
     }
   }
@@ -90,17 +81,12 @@ class ApiService {
         },
         body: json.encode(data),
       );
-
-      // Check the status code and log the response
       if (response.statusCode == 200) {
-        print('Response body: ${response.body}');
         return json.decode(response.body);
       } else {
-        print('Error response: ${response.body}');
         throw Exception('Failed to update profile');
       }
     } catch (e) {
-      print('Exception: $e');
       rethrow;
     }
   }
@@ -120,7 +106,6 @@ class ApiService {
         throw Exception('Failed to update product');
       }
     } catch (e) {
-      print("Error updating product: $e");
       throw Exception('Error updating product');
     }
   }
@@ -131,15 +116,12 @@ class ApiService {
           : '$baseUrl/buyer/?email=$email');
 
       final response = await http.get(url);
-
-      // Check for success (status code 200)
       if (response.statusCode == 200) {
-        return json.decode(response.body); // Successfully fetched farmer data
+        return json.decode(response.body);
       } else {
         throw Exception('Failed to load buyer data');
       }
     } catch (e) {
-      print(e);
       throw Exception('Failed to fetch data: $e');
     }
   }
@@ -152,15 +134,12 @@ class ApiService {
           : '$baseUrl/farmer/?email=$email');
 
       final response = await http.get(url);
-
-      // Check for success (status code 200)
       if (response.statusCode == 200) {
-        return json.decode(response.body); // Successfully fetched farmer data
+        return json.decode(response.body);
       } else {
         throw Exception('Failed to load farmer data');
       }
     } catch (e) {
-      print(e);
       throw Exception('Failed to fetch data: $e');
     }
   }
@@ -172,7 +151,6 @@ class ApiService {
         headers: {"Content-Type": "application/json"},
       );
       if (response.statusCode == 200) {
-        // Parse the JSON data from the response
         return jsonDecode(response.body);
       } else {
         throw Exception('Failed to load products');
@@ -191,10 +169,9 @@ class ApiService {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: jsonEncode(requestBody), // Pass additional data if needed
+        body: jsonEncode(requestBody),
       );
-
-      return response; // Return the full response for error handling
+      return response;
     } catch (e) {
       throw Exception('Failed to place orders: $e');
     }
@@ -231,7 +208,7 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseBody = jsonDecode(response.body);
         responseBody['success'] = responseBody.containsKey('id');
-        return responseBody; // Just return the data, no UI handling here
+        return responseBody;
       } else {
         return {
           'success': false,
@@ -252,24 +229,20 @@ class ApiService {
     if (response.statusCode != 200) {
       throw Exception('Failed to delete cart item: ${response.body}');
     }
-
     return response;
   }
   Future<http.Response> addToCart(Map<String, dynamic> cartData) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/add_to_cart/'),  // Your add_to_cart endpoint URL
+        Uri.parse('$baseUrl/add_to_cart/'),
         headers: {
           'Content-Type': 'application/json',
         },
         body: jsonEncode(cartData),
       );
-
       if (response.statusCode == 200) {
-        // If the response is successful, return the response
         return response;
       } else {
-        // Handle the error response
         throw Exception('Failed to add to cart: ${response.body}');
       }
     } catch (e) {
@@ -284,7 +257,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body); // Parse response as a list of carts
+        return jsonDecode(response.body);
       } else {
         throw Exception('Failed to fetch carts: ${response.statusCode}');
       }
@@ -300,15 +273,12 @@ class ApiService {
         Uri.parse('$baseUrl/products/'),
         headers: {"Content-Type": "application/json"},
       );
-
       if (response.statusCode == 200) {
-        // Decode JSON safely
         return jsonDecode(response.body);
       } else {
         throw Exception("Failed to fetch products. Status code: ${response.statusCode}");
       }
     } catch (error) {
-      // Handle exceptions such as network errors or JSON decoding errors
       throw Exception("Error fetching products: $error");
     }
   }
@@ -324,25 +294,14 @@ class ApiService {
   }
 
   Future<Map<String, dynamic>> login(String email, String password) async {
-    print("Making POST request to $baseUrl/login/ with data: $email, $password");
     final response = await http.post(
       Uri.parse('$baseUrl/login/'),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({"email": email, "password": password}),
     );
-    print("Response body: ${response.body}");
-    print("Response status: ${response.statusCode}");
-
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      if (data['role'] == 'farmer') {
-        print("Logged in as Farmer with ID: ${data['id']}");
-        // Store account status
-        return data;  // Return user data including account_status
-      } else if (data['role'] == 'buyer') {
-        print("Logged in as Buyer with ID: ${data['id']}");
-      }
-      return data;  // Return user data
+      return data;
     } else if (response.statusCode == 401) {
       throw Exception("Invalid credentials");
     } else {
